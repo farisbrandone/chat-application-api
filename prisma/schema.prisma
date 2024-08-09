@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+
+
+model User {
+  id                  String  @id @default(cuid())
+  email               String  @unique
+  firstName           String?
+  password            String
+  isResettingPassword Boolean @default(false)
+  resetPasswordToken  String? @unique
+  avatarFileKey       String? @unique
+
+  conversations   Conversation[]
+  sentMessages    ChatMessage[]
+  stripeAccountId String?        @unique //deux utilisateur ne peuvent avoir le meme compte stripe
+  stripeProductId String?        @unique //chaque donation est relier à un stripe product id
+
+  givenDonations    Donation[] @relation("givingUser") //tous les donation pour lesquels le given users dans la table donation c'est cet utilisateur sont mis dans ce tableau
+  receivedDonations Donation[] @relation("receivingUser")
+}
+
+model Conversation {
+  id        String        @id @default(cuid())
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  users     User[]
+  messages  ChatMessage[]
+}
+
+model ChatMessage {
+  id           String       @id @default(cuid())
+  content      String
+  createdAt    DateTime     @default(now())
+  sender       User         @relation(fields: [senderId], references: [id])
+  senderId     String
+  conversation Conversation @relation(fields: [chatId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  chatId       String
+
+  @@index([chatId])
+  @@index([senderId])
+}
+
+model Donation {
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+  stripeProductId String  //chaque donation est relier à un stripe product id
+  stripePriceId   String   @unique //chaque donation est relier à un stripe price id qui est le prix associer a cette donation et qui doit etre unique
+
+  givingUser   User   @relation("givingUser", fields: [givingUserId], references: [id])
+  givingUserId String
+
+  receivingUser   User   @relation("receivingUser", fields: [receivingUserId], references: [id])
+  receivingUserId String
+  // Amount is in cents
+  amount          Int?
+
+  @@index([givingUserId])//mise en relation one to many Donation table and user table
+  @@index([receivingUserId])
+}
+
+
+
