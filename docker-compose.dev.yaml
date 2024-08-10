@@ -1,0 +1,24 @@
+services:
+  chat-application_dev:
+    environment:
+      - DATABASE_URL
+      - JWT_SECRET
+      - RESEND_API_KEY
+      - FRONTEND_URL
+      - ACCESS_KEY_AWS
+      - SECRET_KEY_AWS
+      - ARN_AWS
+      - NAME_BUCKET_S3_AWS
+      - REGION_AWS
+      - STRIPE_SECRET_KEY
+      - STRIPE_PUBLIC_KEY
+      - STRIPE_WEBHOOK_SECRET
+      - PORT
+
+    container_name: chat-application_dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 8000:8000
